@@ -1,10 +1,9 @@
 use dashmap::DashMap;
 use smallvec::{smallvec, SmallVec};
 use std::sync::Arc;
-use std::thread;
-use std::time::Instant;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let num_workers = 100;
     let items_per_worker = 100000;
 
@@ -13,7 +12,7 @@ fn main() {
 
     for worker_id in 0..num_workers {
         let data = Arc::clone(&data);
-        handles.push(thread::spawn(move || {
+        handles.push(tokio::spawn(async move {
             for j in 0..items_per_worker {
                 data.entry(j)
                     .or_insert_with(|| smallvec![])
@@ -24,6 +23,6 @@ fn main() {
     }
 
     for handle in handles {
-        handle.join().unwrap();
+        handle.await.unwrap();
     }
 }
